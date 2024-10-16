@@ -17,7 +17,7 @@ export default class ValidateEventsRouter implements Router {
     load() {
 
         return (instance: FastifyInstance, opts:  FastifyRegisterOptions<{ prefix: string }>, done: (err?: FastifyError) => void) => {
-            instance.get("/:call_id", this.controller.validateCallId.bind(this.controller.validateCallId));
+            instance.get("/:call_id/:client_id", this.controller.validateCallId.bind(this.controller));
 
             done();
         }

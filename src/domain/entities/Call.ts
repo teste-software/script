@@ -1,46 +1,62 @@
-import { CallEvent } from "../events/CallEvent";
-import { CallStateMachine } from "../fsm/CallStateMachine";
-import { BranchStateMachine } from '../fsm/BranchStateMachine';
+import {TYPES_CALL_EVENTS} from "../types/EventTypes";
 
-export class Call {
-  private id: string;
-  private events: CallEvent[] = [];
-  private stateMachine: CallStateMachine;
-  private branchStateMachines: { [branchNumber: string]: BranchStateMachine } = {};
+export enum STATES {
+    PENDING = 'Pendente',
+    IN_URA = 'Em ura',
+    IN_QUEUE = 'Em fila',
+    CALLING = 'Chamando',
+    IN_ATTENDANCE = 'Em atendimento',
+    TRANSFERRED = 'Transferida',
+    FINISHED = 'Finalizada'
+}
 
-  constructor(id: string) {
-    this.id = id;
-    this.stateMachine = new CallStateMachine();
-  }
+type TransitionMap = {
+    [event in TYPES_CALL_EVENTS]: {
+        [currentState in STATES]?: STATES
+    }
+}
 
-  addEvent(event: CallEvent): void {
-    event.validateParameters();
-    
-    if (this.events.length > 0) {
-      const previousEvent = this.events[this.events.length - 1];
-      previousEvent.validateNextEvent(event);
+export default class Call {
+    private readonly callId: string;
+    constructor(callId: string) {
+        this.callId = callId;
     }
 
-    const branchNumber = event.hasBranchNumber();
-    let branchFsm: BranchStateMachine | null = null;
+    private state: STATES = STATES.PENDING;
+    public historiesStates: STATES[] = [ ];
 
-    if (branchNumber) {
-      if (!this.branchStateMachines[branchNumber]) {
-        this.branchStateMachines[branchNumber] = new BranchStateMachine(branchNumber);
-      }
-
-      branchFsm = this.branchStateMachines[branchNumber];
+    transitions: TransitionMap = {
+        'DISCAGEM': {
+            [STATES.PENDING]: STATES.CALLING
+        },
+        'ATENDIMENTO': {
+            [STATES.CALLING]: STATES.IN_ATTENDANCE
+        },
+        'FIMATENDIMENTO': {
+            [STATES.CALLING]: STATES.FINISHED,
+            [STATES.IN_ATTENDANCE]: STATES.FINISHED
+        }
     }
 
-    this.events.push(event);
-    event.applyFsmTransition(this.stateMachine, branchFsm);
-  }
+    fsmStatusTransition(event: TYPES_CALL_EVENTS) {
+        const nextState = this.transitions[event][this.state];
 
-  getCurrentState(): string {
-    return this.stateMachine.getState();
-  }
+        if (nextState) {
+            this.historiesStates.push(nextState);
+            return this.state = nextState;
+        }
+        throw new Error('Error: ');
+    }
 
-  getBranchState(branchNumber: string): string {
-    return this.branchStateMachines[branchNumber]?.getState() || "UNAVAILABLE";
-  }
+    getState(): STATES {
+        return this.state
+    }
+
+    getCallId() {
+        return this.callId;
+    }
+
+    checkIfThereWasStatus(state: STATES) {
+        return this.historiesStates.some((historyState) => historyState === state);
+    }
 }

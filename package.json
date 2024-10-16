@@ -4,32 +4,34 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest dist/__test__",
     "build": "tsc",
     "start": "node dist/index.js",
     "serve": "tsc && npm run start"
   },
   "author": "",
   "license": "ISC",
-  "prisma": {
-    "schema": "db/schema.prisma"
-  },
   "dependencies": {
     "dotenv": "^16.4.5",
     "fastify": "^5.0.0",
     "glob": "^8.1.0",
     "glob-promise": "^6.0.7",
     "inversify": "^6.0.2",
+    "jest": "^29.7.0",
+    "mongodb": "^6.9.0",
     "reflect-metadata": "^0.2.2",
     "winston": "^3.15.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.25.8",
+    "@babel/preset-env": "^7.25.8",
     "@eslint/js": "^9.12.0",
+    "@jest/globals": "^29.7.0",
     "@types/node": "^22.7.5",
+    "babel-jest": "^29.7.0",
     "eslint": "^9.12.0",
     "globals": "^15.10.0",
     "prettier": "3.3.3",
-    "prisma": "^5.20.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.8.1"

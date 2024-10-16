@@ -1,13 +1,9 @@
 import path from "path";
 import glob from "glob-promise";
 import {Container} from "inversify";
-// import {CallEventProcessor} from "./application/CallEventProcessor";
-// import {ValidateCallEventsUseCase} from './application/usecases/ValidateCallEventsUseCase';
-// import {CallService} from "./domain/services/CallService";
-// import {CallEventRepository} from './infrastructure/repository/CallEventRepository';
+import {Db} from 'mongodb';
 import FastifyServer from './infrastructure/http/Server';
-import ValidateEventsController from "./infrastructure/http/controller/ValidateEvents";
-import ValidateEventsRouter from "./infrastructure/http/router/ValidateEvents";
+import newDbFactory, {ReadStrategy} from './infrastructure/db/index';
 
 enum Scope {
     TRANSIENT,
@@ -24,11 +20,34 @@ enum Type {
 export default async function createContainer() {
     const container = new Container();
 
+    const dbLogClient = await newDbFactory({
+        alias: process.env.DB_LOG_NAME || '55TELECOM_HOMOLOGA_LOG',
+        host: process.env.DB_LOG_HOST || '10.1.1.4',
+        port: process.env.DB_LOG_PORT || '1206',
+        name: process.env.DB_LOG_NAME || '55TELECOM_HOMOLOGA',
+        user: process.env.DB_LOG_USER || 'dbpbxadmin',
+        password: process.env.DB_LOG_PASS || '1!m5D5Bp!X',
+        replicaSet: {
+            name: process.env.DB_LOG_REPLICA_NAME || '',
+            hosts: process.env.DB_LOG_REPLICA_HOSTS || '',
+            readStrategy: process.env.DB_LOG_REPLICA_READ_STRATEGY as ReadStrategy || 'primaryPreferred',
+        },
+    })
+    container.bind<Db>(Db).toConstantValue(dbLogClient as Db).whenTargetNamed('log');
+
     // container.bind(CallEventRepository).toSelf();
     // container.bind(CallService).toSelf();
     // container.bind(CallEventProcessor).toSelf();
     //
     // container.bind(ValidateCallEventsUseCase).toSelf();
+
+    await load(container, path.resolve(__dirname, './domain/services'), Scope.SINGLETON);
+
+    await load(container, path.resolve(__dirname, './application/usecases'), Scope.SINGLETON);
+
+    await load(container, path.resolve(__dirname, './infrastructure/db/schemas/log'), Scope.SINGLETON);
+    await load(container, path.resolve(__dirname, './infrastructure/db/repository'), Scope.SINGLETON);
+
 
     await load(container, path.resolve(__dirname, './infrastructure/http/controller'), Scope.SINGLETON);
     await load(container, path.resolve(__dirname, './infrastructure/http/router'), Scope.SINGLETON);
@@ -98,17 +117,7 @@ async function load(
                         binding = container.bind(Class).to(target).inTransientScope();
                         break;
                     case Scope.SINGLETON:
-                        console.log('-- Class-', Class)
-                        console.log('-- target-', target)
                         binding = container.bind(Class).to(target).inSingletonScope();
-                        let e = container.get(target);
-
-                        if (e instanceof ValidateEventsController) {
-                            console.log("------ sop quero ter certeza", e.validateCallId);
-
-                        }
-
-
                         break;
                     case Scope.REQUEST:
                         binding = container.bind(Class).to(target).inRequestScope();
