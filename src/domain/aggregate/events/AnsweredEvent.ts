@@ -1,46 +1,65 @@
-import {CallWaitingTime} from "../../value-objects/CallWaitingTime";
+import {CallWaitingTime} from "../../valueObjects/CallWaitingTime";
 import {AggregateEvent} from "./AggregateEvent";
-import {ClientId} from "../../value-objects/ClientId";
-import {QueueId} from "../../value-objects/QueueId";
-import {NumberPhone} from "../../value-objects/NumberPhone";
-import {BranchNumber} from "../../value-objects/BranchNumber";
-import {CallUraTime} from "../../value-objects/CallUraTime";
-import {QueueName} from "../../value-objects/QueueName";
+import {ClientId} from "../../valueObjects/ClientId";
+import {QueueId} from "../../valueObjects/QueueId";
+import {NumberPhone} from "../../valueObjects/NumberPhone";
+import {BranchNumber} from "../../valueObjects/BranchNumber";
+import {CallUraTime} from "../../valueObjects/CallUraTime";
+import {QueueName} from "../../valueObjects/QueueName";
+import {CallInputTime} from "../../valueObjects/CallInputTime";
+import {CALLS_TYPE_EVENTS_NAMES, Event} from "../../types/EventTypes";
+
+export interface EventAnsweredDomain {
+    clientId: ClientId,
+    queueId: QueueId,
+    queueName: QueueName,
+    callWaitingTime: CallWaitingTime,
+    callUraTime: CallUraTime,
+    typeCall: 'receptive' | 'internal' | 'active',
+    phoneOrigin: NumberPhone,
+    destinationBranchNumber: BranchNumber,
+    sourceBranchNumber?: BranchNumber,
+}
+
 
 export class AnsweredEventAggregate extends AggregateEvent {
-    private reportEvent: {[k: string]: any} = {}
-    NAME_EVENT = 'ATENDIMENTO'
+    private _event = {} as EventAnsweredDomain;
+    NAME_EVENT = CALLS_TYPE_EVENTS_NAMES.ATTENDANCE
+    NEXT_EVENTS_ALLOWED = [CALLS_TYPE_EVENTS_NAMES.END_ATTENDANCE];
 
-    generateReport(): string {
-        let report = `Relatório do Evento de Atendimento:\n`;
-
-        report += `Cliente: ${this.reportEvent.clientId.getValue()}\n`;
-        report += `Fila: ${this.reportEvent.queueName.getValue()} (ID da Fila: ${this.reportEvent.queueId.getValue()})\n`;
-
-        const typeCall = this.reportEvent.queueId.getTypeQueue();
-        if (typeCall === 'active') {
-            report += `Tipo de Ligação: Ativa\n`;
-            report += `Número Discado: ${this.reportEvent.phoneOrigin.getValue()}\n`;
-        } else if (typeCall === 'internal') {
-            report += `Tipo de Ligação: Interna (Ramal)\n`;
-            report += `Ramal de Origem: ${this.reportEvent.sourceBranchNumber.getValue()}\n`;
-            report += `Ramal de Destino: ${this.reportEvent.destinationBranchNumber.getValue()}\n`;
-        } else if (typeCall === 'receptive') {
-            report += `Tipo de Ligação: Receptiva\n`;
-            report += `Número de Origem: ${this.reportEvent.phoneOrigin.getValue()}\n`;
-            report += `Ramal de Atendimento: ${this.reportEvent.destinationBranchNumber.getValue()}\n`;
-        }
-
-        report += `Tempo de Espera: ${this.reportEvent.callWaitingTime.getValue()} segundos\n`;
-
-        if (typeCall === 'receptive') report += `Tempo na URA: ${this.reportEvent.callUraTime.getValue()} segundos\n`;
-
-        report += `Atendimento realizado na fila "${this.reportEvent.queueName.getValue()}" com sucesso.`;
-
-        return report;
+    constructor(eventData: Event) {
+        super(eventData);
+        this.builderParameters()
     }
 
-    validateParameters(): void {
+    get event() {
+        return this._event
+    }
+
+    getCallParticipantsBranches() {
+        return {
+            sourceBranchNumber: this._event.sourceBranchNumber,
+            destinationBranchNumber: this._event.destinationBranchNumber
+        }
+    }
+
+    toSummary() {
+        return {
+            nameEvent: this.NAME_EVENT,
+            callId: this.eventEntity.callId,
+            clientId: this._event.clientId.getValue(),
+            queueId: this._event.queueId.getValue(),
+            queueName: this._event.queueName.getValue(),
+            callWaitingTime: this._event.callWaitingTime.getValue(),
+            callUraTime: this._event.callUraTime.getValue(),
+            typeCall: this._event.typeCall,
+            phoneOrigin: this._event.phoneOrigin.getValue(),
+            destinationBranchNumber: this._event.destinationBranchNumber.getValue(),
+            sourceBranchNumber: this._event.sourceBranchNumber?.getValue(),
+        };
+    };
+
+    builderParameters(): void {
         /*
          * Parâmetros de Evento de Atendimento
          *
@@ -76,31 +95,18 @@ export class AnsweredEventAggregate extends AggregateEvent {
          *    Nesse caso, o event.originador é um número externo (DDIDDDNumberPhone), ou seja, o número de telefone que recebeu a ligação.
          *          > originador: número externo que recebeu a ligação
          */
-        this.reportEvent.clientId = new ClientId(this.eventEntity.clientId);
-        this.reportEvent.queueId = new QueueId(this.eventEntity.queueId);
-        this.reportEvent.queueName = new QueueName(this.eventEntity.queueName);
-        this.reportEvent.destinationBranchNumber = new BranchNumber(this.eventEntity.parameterZero);
-        this.reportEvent.callWaitingTime = new CallWaitingTime(this.eventEntity.parameterOne);
-        this.reportEvent.callUraTime = new CallUraTime(this.eventEntity.parameterTwo);
+        this._event.clientId = new ClientId(this.eventEntity.clientId);
+        this._event.queueId = new QueueId(this.eventEntity.queueId);
+        this._event.queueName = new QueueName(this.eventEntity.queueName);
+        this._event.destinationBranchNumber = new BranchNumber(this.eventEntity.parameterZero);
+        this._event.callWaitingTime = new CallWaitingTime(this.eventEntity.parameterOne);
+        this._event.callUraTime = new CallUraTime(this.eventEntity.parameterTwo);
 
-        const typeCall = this.reportEvent.queueId.getTypeQueue();
-        if (typeCall === 'active') this.reportEvent.phoneOrigin =  new NumberPhone(this.eventEntity.originator);
-        if (typeCall === 'internal') this.reportEvent.sourceBranchNumber = new BranchNumber(this.eventEntity.originator);
-        if (typeCall === 'receptive') this.reportEvent.phoneOrigin = new NumberPhone(this.eventEntity.originator);
+        const typeCall = this._event.queueId.getTypeQueue();
+        this._event.typeCall = typeCall;
+        if (typeCall === 'active') this._event.phoneOrigin =  new NumberPhone(this.eventEntity.originator);
+        if (typeCall === 'internal') this._event.sourceBranchNumber = new BranchNumber(this.eventEntity.originator);
+        if (typeCall === 'receptive') this._event.phoneOrigin = new NumberPhone(this.eventEntity.originator);
     }
 
-    validateNextEvent(nextEvent: AggregateEvent): void {
-        if (nextEvent.eventEntity.nameEvent !== "FIMATENDIMENTO") {
-            throw new Error(`Invalid next event after ATENDIMENTO: ${nextEvent.eventEntity.nameEvent}`);
-        }
-        this.validateSequence(nextEvent);
-    }
-
-    validateSequence(nextEvent: AggregateEvent): void {
-        const nextSequenceId = nextEvent.eventEntity.sequenceId;
-        const currentSequenceId = this.eventEntity.sequenceId;
-        if (nextSequenceId !== currentSequenceId + 1) {
-            throw new Error(`Invalid sequence: expected ${currentSequenceId + 1}, got ${nextSequenceId}`);
-        }
-    }
 }

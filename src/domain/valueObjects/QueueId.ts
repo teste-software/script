@@ -1,9 +1,13 @@
-export class QueueId {
-    private readonly value: string;
+import ValueObject from "./index";
+import {ErrorName, ValueObjectErrorDetail} from "../../infrastructure/errors/CustomError";
+
+export class QueueId extends ValueObject {
+    readonly value: string;
 
     constructor(value: string) {
+        super()
         if (!value) {
-            throw new Error("Queue id does not exist");
+            this.logError(ValueObjectErrorDetail.QUEUE_ID, ErrorName.DATA_NOT_FOUND, "ID da Fila não informado");
         }
         this.value = value;
     }

@@ -6,6 +6,14 @@ export default class EventEntity {
         this.event = event
     }
 
+    get lastSequence(): boolean {
+        return Boolean(this.event.last_sequence)
+    }
+
+    get callId(): string {
+        return this.event.call_id;
+    }
+
     get nameEvent() {
         return this.event.event;
     }

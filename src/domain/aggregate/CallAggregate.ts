@@ -1,37 +1,47 @@
-import Call, {STATES} from "../entities/Call";
-import {TYPES_CALL_EVENTS} from "../types/EventTypes";
+import Call from "../entities/Call";
+import {CALLS_TYPE_EVENTS_NAMES} from "../types/EventTypes";
+import {QueueId} from "../valueObjects/QueueId";
+import {BaseAggregate} from "./index";
+import {CallStateType} from "../valueObjects/CallState";
+import {ErrorName, ValueObjectErrorDetail} from "../../infrastructure/errors/CustomError";
 
-export default class CallAggregate {
-    private readonly callEntity: Call;
-    private reportCall: { historiesTransition: { nameEvent: string, statusPrevious: STATES, statusCurrent: STATES }[] } = {
-        historiesTransition: []
-    }
+export default class CallAggregate extends BaseAggregate {
+    readonly callEntity: Call;
+    private queueId: QueueId | null = null;
 
     constructor(callId: string) {
+        super();
         this.callEntity = new Call(callId);
     }
 
-    generateReport(): string {
-        let report = `Relatório da Ligação:\n`;
-        report += `Call Id: ${this.callEntity.getCallId()}`
+    getQueueId() {
+        return this.queueId?.getValue();
+    }
 
-        for (const transition of this.reportCall.historiesTransition) {
-            report += `Evento: ${transition.nameEvent} \n`
-            report += `O status da ligação estava ${transition.statusPrevious} e alterou para ${transition.statusCurrent}\n`
+    transitionStatus(nameEvent: CALLS_TYPE_EVENTS_NAMES) {
+        switch (nameEvent) {
+            case CALLS_TYPE_EVENTS_NAMES.DIALING:
+                this.callEntity.applyStateTransition(CallStateType.CALLING);
+                break;
+            case CALLS_TYPE_EVENTS_NAMES.ATTENDANCE:
+                this.callEntity.applyStateTransition(CallStateType.IN_ATTENDANCE);
+                break;
+            case CALLS_TYPE_EVENTS_NAMES.END_ATTENDANCE:
+                this.callEntity.applyStateTransition(CallStateType.FINISHED);
+                break;
+        }
+    }
+
+    forwardingToQueue(queueId: string, nameEvent: CALLS_TYPE_EVENTS_NAMES) {
+        if (!this.queueId) {
+            this.queueId = new QueueId(queueId);
+            return;
+        }
+        if (queueId === this.queueId.getValue()) return;
+        if (nameEvent !== CALLS_TYPE_EVENTS_NAMES.OVERFLOW) {
+            this.logError(ValueObjectErrorDetail.CALL, ErrorName.INVALID_DATA, `QueueID informado no evento ${nameEvent} é diferente da ligação`);
         }
 
-        return report;
-    }
-
-    handleEvent(nameEvent: string) {
-        const statusPrevious = this.callEntity.getState();
-        this.callEntity.fsmStatusTransition(nameEvent as TYPES_CALL_EVENTS);
-        const statusCurrent = this.callEntity.getState();
-
-        this.reportCall.historiesTransition.push({ nameEvent: nameEvent,  statusPrevious: statusPrevious, statusCurrent: statusCurrent})
-    }
-
-    isCallAnswered(): boolean {
-        return this.callEntity.checkIfThereWasStatus(STATES.IN_ATTENDANCE)
+        this.queueId = new QueueId(queueId);
     }
 }

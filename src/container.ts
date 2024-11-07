@@ -4,6 +4,9 @@ import {Container} from "inversify";
 import {Db} from 'mongodb';
 import FastifyServer from './infrastructure/http/Server';
 import newDbFactory, {ReadStrategy} from './infrastructure/db/index';
+import DialingEventService from "./domain/services/events/DialingEventService";
+import AnsweredEventService from "./domain/services/events/AnsweredEventService";
+import EndAnsweredEventService from "./domain/services/events/EndAnsweredEventService";
 
 enum Scope {
     TRANSIENT,
@@ -35,13 +38,23 @@ export default async function createContainer() {
     })
     container.bind<Db>(Db).toConstantValue(dbLogClient as Db).whenTargetNamed('log');
 
-    // container.bind(CallEventRepository).toSelf();
-    // container.bind(CallService).toSelf();
-    // container.bind(CallEventProcessor).toSelf();
-    //
-    // container.bind(ValidateCallEventsUseCase).toSelf();
+    await load(container, path.resolve(__dirname, './domain/repository'), Scope.SINGLETON);
 
     await load(container, path.resolve(__dirname, './domain/services'), Scope.SINGLETON);
+
+    container.bind('getServiceEventByName').toFunction((name: string) => {
+        // @to-do torna isso dinamico e coloca os nomes dos eventos em tipo
+        switch (name) {
+            case 'DISCAGEM':
+                return container.get(DialingEventService)
+            case 'ATENDIMENTO':
+                return container.get(AnsweredEventService)
+            case 'FIMATENDIMENTO':
+                return container.get(EndAnsweredEventService)
+            default:
+                throw new Error(`Serviço '${name}' não encontrado no contêiner.`);
+        }
+    });
 
     await load(container, path.resolve(__dirname, './application/usecases'), Scope.SINGLETON);
 

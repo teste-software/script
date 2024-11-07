@@ -1,60 +1,67 @@
 import {AggregateEvent} from "./AggregateEvent";
 import CallAggregate from "../CallAggregate";
-import {ClientId} from "../../value-objects/ClientId";
-import {QueueId} from "../../value-objects/QueueId";
-import {QueueName} from "../../value-objects/QueueName";
-import {NumberPhone} from "../../value-objects/NumberPhone";
-import {BranchNumber} from "../../value-objects/BranchNumber";
-import {CallWaitingTime} from "../../value-objects/CallWaitingTime";
-import {CallAttendanceTime} from "../../value-objects/CallAttendanceTime";
-import {BranchAttendanceTime} from "../../value-objects/BranchAttendanceTime";
+import {ClientId} from "../../valueObjects/ClientId";
+import {QueueId} from "../../valueObjects/QueueId";
+import {QueueName} from "../../valueObjects/QueueName";
+import {NumberPhone} from "../../valueObjects/NumberPhone";
+import {BranchNumber} from "../../valueObjects/BranchNumber";
+import {CallWaitingTime} from "../../valueObjects/CallWaitingTime";
+import {CallAttendanceTime} from "../../valueObjects/CallAttendanceTime";
+import {BranchAttendanceTime} from "../../valueObjects/BranchAttendanceTime";
+import {CALLS_TYPE_EVENTS_NAMES, Event} from "../../types/EventTypes";
+
+export interface EventAnsweredDomain {
+    clientId: ClientId,
+    queueId: QueueId,
+    queueName: QueueName,
+    callWaitingTime: CallWaitingTime,
+    typeCall: 'receptive' | 'internal' | 'active',
+    phoneOrigin: NumberPhone,
+    destinationBranchNumber?: BranchNumber,
+    sourceBranchNumber?: BranchNumber,
+    callAttendanceTime: CallAttendanceTime,
+    branchAttendanceTime: BranchAttendanceTime
+}
 
 export class EndAnsweredEventAggregate extends AggregateEvent {
-    NAME_EVENT = 'FIMATENDIMENTO'
-    private reportEvent: { [k: string]: any } = {}
+    NAME_EVENT = CALLS_TYPE_EVENTS_NAMES.END_ATTENDANCE
+    private _event = {} as EventAnsweredDomain;
+    NEXT_EVENTS_ALLOWED = [];
 
-    generateReport(): string {
-        let report = `Relatório do Evento de Atendimento:\n`;
+    constructor(eventData: Event) {
+        super(eventData);
 
-        report += `Cliente: ${this.reportEvent.clientId.getValue()}\n`;
-        report += `Fila: ${this.reportEvent.queueName.getValue()} (ID da Fila: ${this.reportEvent.queueId.getValue()})\n`;
-        report += `Tempo de Espera: ${this.reportEvent.callWaitingTime.getValue()} segundos\n`;
-
-        switch (this.reportEvent.queueId.getTypeQueue()) {
-            case 'receptive':
-                report += `Tipo de Ligação: Receptiva\n`;
-                report += `Número de Origem: ${this.reportEvent.phoneOrigin.getValue()}\n`;
-                report += `Ramal que Recebeu a Ligação: ${this.reportEvent.destinationBranchNumber.getValue()}\n`;
-                break;
-
-            case 'internal':
-                report += `Tipo de Ligação: Interna (Ramal)\n`;
-                report += `Ramal de Origem: ${this.reportEvent.sourceBranchNumber.getValue()}\n`;
-                report += `Ramal de Destino: ${this.reportEvent.destinationBranchNumber.getValue()}\n`;
-                break;
-
-            case 'active':
-                report += `Tipo de Ligação: Ativa\n`;
-                report += `Ramal de Origem: ${this.reportEvent.sourceBranchNumber.getValue()}\n`;
-                report += `Número de Destino: ${this.reportEvent.phoneOrigin.getValue()}\n`;
-                break;
-
-            default:
-                report += `Tipo de Ligação: Desconhecido\n`;
-                break;
-        }
-
-        if (this.reportEvent.callAttendanceTime) {
-            report += `Tempo de Atendimento: ${this.reportEvent.callAttendanceTime.getValue()} segundos\n`;
-            if (this.reportEvent.branchAttendanceTime) {
-                report += `Tempo de Atendimento no Ramal: ${this.reportEvent.branchAttendanceTime.getValue()} segundos\n`;
-            }
-        }
-
-        return report;
+        this.builderParameters();
     }
 
-    validateParameters(callAggregate: CallAggregate): void {
+    get event() {
+        return this._event
+    }
+
+    getCallParticipantsBranches() {
+        return {
+            sourceBranchNumber: this._event.sourceBranchNumber,
+            destinationBranchNumber: this._event.destinationBranchNumber
+        }
+    }
+
+    toSummary() {
+        return {
+            nameEvent: this.NAME_EVENT,
+            callId: this.eventEntity.callId,
+            queueId: this._event.clientId.getValue(),
+            queueName: this._event.queueName.getValue(),
+            callWaitingTime: this._event.callWaitingTime.getValue(),
+            typeCall: this._event.typeCall,
+            phoneOrigin: this._event.phoneOrigin.getValue(),
+            destinationBranchNumber: this._event.destinationBranchNumber?.getValue(),
+            sourceBranchNumber: this._event.sourceBranchNumber?.getValue(),
+            callAttendanceTime: this._event.callAttendanceTime.getValue(),
+            branchAttendanceTime: this._event.branchAttendanceTime.getValue()
+        };
+    };
+
+    builderParameters(): void {
         /*
          * Parâmetros de Evento de Atendimento
          * - id_cliente_externo: ID único da conta do cliente que está realizando a ligação.
@@ -96,46 +103,32 @@ export class EndAnsweredEventAggregate extends AggregateEvent {
          *    > data2: tempo de espera que a ligação ficou tocando para o ramal.
          */
 
-        this.reportEvent.clientId = new ClientId(this.eventEntity.clientId);
-        this.reportEvent.queueId = new QueueId(this.eventEntity.queueId);
-        this.reportEvent.queueName = new QueueName(this.eventEntity.queueName);
+        this._event.clientId = new ClientId(this.eventEntity.clientId);
+        this._event.queueId = new QueueId(this.eventEntity.queueId);
+        this._event.queueName = new QueueName(this.eventEntity.queueName);
+        this._event.callAttendanceTime = new CallAttendanceTime(this.eventEntity.parameterThree);
 
-        const isCallAnswered = callAggregate.isCallAnswered();
-        const typeCall = this.reportEvent.queueId.getTypeQueue();
-
+        const typeCall = this._event.queueId.getTypeQueue();
         switch (typeCall) {
             case 'receptive':
-                this.reportEvent.phoneOrigin = new NumberPhone(this.eventEntity.originator);
-                this.reportEvent.destinationBranchNumber = new BranchNumber(this.eventEntity.parameterNine);
-                this.reportEvent.callWaitingTime = new CallWaitingTime(this.eventEntity.parameterTwo);
+                this._event.phoneOrigin = new NumberPhone(this.eventEntity.originator);
+                this._event.destinationBranchNumber = new BranchNumber(this.eventEntity.parameterNine);
+                this._event.callWaitingTime = new CallWaitingTime(this.eventEntity.parameterTwo);
                 break;
 
             case 'internal':
-                this.reportEvent.sourceBranchNumber = new BranchNumber(this.eventEntity.originator);
-                this.reportEvent.destinationBranchNumber = new BranchNumber(this.eventEntity.parameterNine);
-                this.reportEvent.callWaitingTime = new CallWaitingTime(this.eventEntity.parameterTwo);
+                this._event.sourceBranchNumber = new BranchNumber(this.eventEntity.originator);
+                this._event.destinationBranchNumber = new BranchNumber(this.eventEntity.parameterNine);
+                this._event.callWaitingTime = new CallWaitingTime(this.eventEntity.parameterTwo);
                 break;
 
             case 'active':
-                this.reportEvent.sourceBranchNumber = new BranchNumber(this.eventEntity.parameterNine);
-                this.reportEvent.phoneOrigin = new NumberPhone(this.eventEntity.originator);
-                this.reportEvent.callWaitingTime = new CallWaitingTime(this.eventEntity.parameterTwo);
+                this._event.sourceBranchNumber = new BranchNumber(this.eventEntity.parameterNine);
+                this._event.phoneOrigin = new NumberPhone(this.eventEntity.originator);
+                this._event.callWaitingTime = new CallWaitingTime(this.eventEntity.parameterTwo);
+                this._event.branchAttendanceTime = new BranchAttendanceTime(this.eventEntity.parameterOne);
                 break;
-
-            default:
-                throw new Error(`Tipo de chamada desconhecido: ${typeCall}`);
         }
 
-        if (isCallAnswered) {
-            this.reportEvent.callAttendanceTime = new CallAttendanceTime(this.eventEntity.parameterThree);
-
-            if (typeCall === 'active') {
-                this.reportEvent.branchAttendanceTime = new BranchAttendanceTime(this.eventEntity.parameterOne);
-            }
-        }
-    }
-
-    validateNextEvent(nextEvent: AggregateEvent): void {
-        throw new Error("FimAtendimento should be the last event");
     }
 }

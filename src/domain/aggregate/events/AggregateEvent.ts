@@ -1,17 +1,18 @@
-import {Event, TYPES_CALL_EVENTS} from '../../types/EventTypes'
+import {BRANCHES_TYPE_EVENTS_NAMES, CALLS_TYPE_EVENTS_NAMES, Event} from '../../types/EventTypes'
 import EventEntity from "../../entities/Event";
-import CallAggregate from "../CallAggregate";
+import {BaseAggregate} from "../index";
 
 
-export abstract class AggregateEvent {
-    public NAME_EVENT: string = '';
+export abstract class AggregateEvent extends BaseAggregate {
+    public NAME_EVENT: CALLS_TYPE_EVENTS_NAMES | BRANCHES_TYPE_EVENTS_NAMES = CALLS_TYPE_EVENTS_NAMES.DIALING;
+    public NEXT_EVENTS_ALLOWED: (CALLS_TYPE_EVENTS_NAMES | BRANCHES_TYPE_EVENTS_NAMES)[] = [];
     readonly eventEntity: EventEntity;
 
     constructor(eventData: Event) {
-      this.eventEntity = new EventEntity(eventData);
+        super()
+        this.eventEntity = new EventEntity(eventData);
     }
 
-    abstract validateParameters(callAggregate?: CallAggregate): void;
-    abstract validateNextEvent(nextEvent: AggregateEvent): void;
-    abstract generateReport(): string;
-  }
+    abstract builderParameters(): void;
+    abstract toSummary(): { [k: string]: any };
+}
