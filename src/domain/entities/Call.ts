@@ -17,8 +17,8 @@ export default class Call {
         this.state = nextState;
     }
 
-    getState(): CallState {
-        return this.state;
+    getState(): string {
+        return this.state.getValue();
     }
 
     getCallId() {

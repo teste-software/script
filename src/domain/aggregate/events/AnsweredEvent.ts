@@ -17,7 +17,7 @@ export interface EventAnsweredDomain {
     callUraTime: CallUraTime,
     typeCall: 'receptive' | 'internal' | 'active',
     phoneOrigin: NumberPhone,
-    destinationBranchNumber: BranchNumber,
+    destinationBranchNumber?: BranchNumber,
     sourceBranchNumber?: BranchNumber,
 }
 
@@ -54,7 +54,7 @@ export class AnsweredEventAggregate extends AggregateEvent {
             callUraTime: this._event.callUraTime.getValue(),
             typeCall: this._event.typeCall,
             phoneOrigin: this._event.phoneOrigin.getValue(),
-            destinationBranchNumber: this._event.destinationBranchNumber.getValue(),
+            destinationBranchNumber: this._event.destinationBranchNumber?.getValue(),
             sourceBranchNumber: this._event.sourceBranchNumber?.getValue(),
         };
     };
@@ -98,15 +98,23 @@ export class AnsweredEventAggregate extends AggregateEvent {
         this._event.clientId = new ClientId(this.eventEntity.clientId);
         this._event.queueId = new QueueId(this.eventEntity.queueId);
         this._event.queueName = new QueueName(this.eventEntity.queueName);
-        this._event.destinationBranchNumber = new BranchNumber(this.eventEntity.parameterZero);
         this._event.callWaitingTime = new CallWaitingTime(this.eventEntity.parameterOne);
         this._event.callUraTime = new CallUraTime(this.eventEntity.parameterTwo);
 
         const typeCall = this._event.queueId.getTypeQueue();
         this._event.typeCall = typeCall;
-        if (typeCall === 'active') this._event.phoneOrigin =  new NumberPhone(this.eventEntity.originator);
-        if (typeCall === 'internal') this._event.sourceBranchNumber = new BranchNumber(this.eventEntity.originator);
-        if (typeCall === 'receptive') this._event.phoneOrigin = new NumberPhone(this.eventEntity.originator);
+        if (typeCall === 'active') {
+            this._event.phoneOrigin =  new NumberPhone(this.eventEntity.originator);
+            this._event.sourceBranchNumber = new BranchNumber(this.eventEntity.parameterZero);
+        }
+        if (typeCall === 'internal') {
+            this._event.sourceBranchNumber = new BranchNumber(this.eventEntity.originator);
+            this._event.destinationBranchNumber = new BranchNumber(this.eventEntity.parameterZero);
+        }
+        if (typeCall === 'receptive') {
+            this._event.phoneOrigin = new NumberPhone(this.eventEntity.originator);
+            this._event.destinationBranchNumber = new BranchNumber(this.eventEntity.parameterZero);
+        }
     }
 
 }

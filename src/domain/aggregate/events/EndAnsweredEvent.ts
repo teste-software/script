@@ -49,7 +49,8 @@ export class EndAnsweredEventAggregate extends AggregateEvent {
         return {
             nameEvent: this.NAME_EVENT,
             callId: this.eventEntity.callId,
-            queueId: this._event.clientId.getValue(),
+            clientId: this._event.clientId.getValue(),
+            queueId: this._event.queueId.getValue(),
             queueName: this._event.queueName.getValue(),
             callWaitingTime: this._event.callWaitingTime.getValue(),
             typeCall: this._event.typeCall,
@@ -109,6 +110,7 @@ export class EndAnsweredEventAggregate extends AggregateEvent {
         this._event.callAttendanceTime = new CallAttendanceTime(this.eventEntity.parameterThree);
 
         const typeCall = this._event.queueId.getTypeQueue();
+        this._event.typeCall = typeCall;
         switch (typeCall) {
             case 'receptive':
                 this._event.phoneOrigin = new NumberPhone(this.eventEntity.originator);

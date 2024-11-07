@@ -1,7 +1,9 @@
 import {BRANCHES_TYPE_EVENTS_NAMES, CALLS_TYPE_EVENTS_NAMES, Event} from '../types/EventTypes'
 import {CustomError, ErrorName, ObjectErrorType, ValueObjectErrorDetail} from "../../infrastructure/errors/CustomError";
+import {injectable} from "inversify";
 
-export class BaseService {
+@injectable()
+export default class BaseService {
     protected errorLogs: CustomError[] = [];
 
     protected logError(

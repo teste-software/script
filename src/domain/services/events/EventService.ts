@@ -2,7 +2,7 @@ import {injectable} from "inversify";
 import {Event} from "../../types/EventTypes";
 import {AggregateEvent} from "../../aggregate/events/AggregateEvent";
 import {CallSession} from "../../repository/CallRepositoryDomain";
-import {BaseService} from "../index";
+import BaseService from "../index";
 import {ErrorName, ValueObjectErrorDetail} from "../../../infrastructure/errors/CustomError";
 
 @injectable()
@@ -38,28 +38,28 @@ export default abstract class EventService extends BaseService {
     }
 
     protected validateNextEvent(lastEventAggregate: AggregateEvent, currentEventAggregate: AggregateEvent): void {
-        if (!lastEventAggregate.NEXT_EVENTS_ALLOWED.includes(currentEventAggregate.NAME_EVENT)) {
+        if (!lastEventAggregate?.NEXT_EVENTS_ALLOWED?.includes(currentEventAggregate.NAME_EVENT)) {
             this.logError(
                 ValueObjectErrorDetail.EVENT,
                 ErrorName.INVALID_EVENT,
-                `O evento ${currentEventAggregate.NAME_EVENT} é invalido apos o evento ${lastEventAggregate.NAME_EVENT}`,
-                currentEventAggregate.NAME_EVENT,
-                currentEventAggregate.eventEntity.callId
+                `O evento ${currentEventAggregate?.NAME_EVENT} é invalido apos o evento ${lastEventAggregate?.NAME_EVENT}`,
+                currentEventAggregate?.NAME_EVENT,
+                currentEventAggregate?.eventEntity.callId
             );
         }
         this.validateSequence(lastEventAggregate, currentEventAggregate);
     }
 
     private validateSequence(lastEventAggregate: AggregateEvent, currentEventAggregate: AggregateEvent): void {
-        const lastSequenceId = lastEventAggregate.eventEntity.sequenceId;
-        const currentSequenceId = currentEventAggregate.eventEntity.sequenceId;
+        const lastSequenceId = lastEventAggregate?.eventEntity.sequenceId;
+        const currentSequenceId = currentEventAggregate?.eventEntity.sequenceId;
         if (currentSequenceId !== lastSequenceId + 1) {
             this.logError(
                 ValueObjectErrorDetail.EVENT,
                 ErrorName.INVALID_SEQUENCE_ID,
                 `O sequence id ${currentSequenceId} é errado, expectativa é "${lastSequenceId + 1}"`,
-                currentEventAggregate.NAME_EVENT,
-                currentEventAggregate.eventEntity.callId
+                currentEventAggregate?.NAME_EVENT,
+                currentEventAggregate?.eventEntity.callId
             );
         }
     }

@@ -19,14 +19,20 @@ export default class PbxProcessedEventsRepository {
             client_id: callSession.clientId,
             call: {
                  queue_id: callAggregate.getQueueId(),
-                 histories_states: callAggregate.callEntity.historiesStates,
+                 histories_states: callAggregate.callEntity.historiesStates.map((history) => ({
+                     state: history.state,
+                     errorLog: history.getErrors()
+                 })),
                  state: callAggregate.callEntity.getState(),
                  errorLog: callAggregate.getErrors()
             },
             start_date: callSession.startDate,
             branches: branchesAggregates.map((aggregate) => ({
                 branch_number: aggregate.branchEntity.getBranchNumber(),
-                histories_states: aggregate.branchEntity.historiesStates,
+                histories_states: aggregate.branchEntity.historiesStates.map((history) => ({
+                    state: history.state,
+                    errorLog: history.getErrors()
+                })),
                 state: aggregate.branchEntity.getState(),
                 errorLog: aggregate.getErrors()
 

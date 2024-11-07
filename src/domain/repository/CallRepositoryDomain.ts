@@ -33,7 +33,6 @@ export default class CallRepositoryDomain {
         callSession.branches[branchNumber] = branchAggregate;
     }
 
-    // updae para ver a questão do last sequece para salver e deleta
     addCallWithNewEvent(callId: string, clientId: string, eventAggregate: AggregateEvent) {
         const key = `${callId}.${clientId}`
         const callSession = this.callsAggregates.get(key)!;
@@ -42,6 +41,8 @@ export default class CallRepositoryDomain {
         callSession.lastEvent = eventAggregate;
         callSession.lastSequenceId = eventAggregate.eventEntity.sequenceId;
         callSession.processing = true;
+
+        this.callsAggregates.set(key, callSession)
 
         if (eventAggregate.eventEntity.lastSequence) {
             this.processedEventsRepository.saveProcessedEvent(callSession);

@@ -26,7 +26,7 @@ export class BranchState extends ValueObject {
             [BranchStateType.LOGGED_IN]: [BranchStateType.OCCUPIED, BranchStateType.PAUSED, BranchStateType.LOGGED_OUT, BranchStateType.CALLING],
             [BranchStateType.LOGGED_OUT]: [BranchStateType.LOGGED_IN],
             [BranchStateType.PAUSED]: [BranchStateType.LOGGED_IN],
-            [BranchStateType.OCCUPIED]: [BranchStateType.LOGGED_IN, BranchStateType.PAUSED],
+            [BranchStateType.OCCUPIED]: [BranchStateType.LOGGED_IN, BranchStateType.PAUSED, BranchStateType.OCCUPIED],
             [BranchStateType.CALLING]: [BranchStateType.OCCUPIED, BranchStateType.LOGGED_IN],
         };
 

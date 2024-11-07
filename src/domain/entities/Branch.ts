@@ -19,8 +19,8 @@ export default class Branch {
         this.state = nextState;
     }
 
-    getState(): BranchState {
-        return this.state
+    getState(): string {
+        return this.state.getValue()
     }
 
     getBranchNumber() {

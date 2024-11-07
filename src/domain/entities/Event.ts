@@ -7,6 +7,8 @@ export default class EventEntity {
     }
 
     get lastSequence(): boolean {
+        if (this.event.last_sequence === 'true') return true;
+        if (this.event.last_sequence === 'false') return false;
         return Boolean(this.event.last_sequence)
     }
 
