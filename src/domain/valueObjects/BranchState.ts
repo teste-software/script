@@ -23,7 +23,7 @@ export class BranchState extends ValueObject {
 
     canTransitionTo(nextState: BranchStateType): boolean {
         const allowedTransitions: { [key in BranchStateType]?: BranchStateType[] } = {
-            [BranchStateType.LOGGED_IN]: [BranchStateType.OCCUPIED, BranchStateType.PAUSED, BranchStateType.LOGGED_OUT, BranchStateType.CALLING],
+            [BranchStateType.LOGGED_IN]: [BranchStateType.LOGGED_IN, BranchStateType.OCCUPIED, BranchStateType.PAUSED, BranchStateType.LOGGED_OUT, BranchStateType.CALLING],
             [BranchStateType.LOGGED_OUT]: [BranchStateType.LOGGED_IN],
             [BranchStateType.PAUSED]: [BranchStateType.LOGGED_IN],
             [BranchStateType.OCCUPIED]: [BranchStateType.LOGGED_IN, BranchStateType.PAUSED, BranchStateType.OCCUPIED],

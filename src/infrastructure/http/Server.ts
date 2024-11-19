@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import { inject, injectable } from "inversify";
 import {Router} from "./router/Index";
+import cors from '@fastify/cors';
 
 @injectable()
 export default class FastifyServer {
@@ -9,6 +10,13 @@ export default class FastifyServer {
   constructor(
       @inject("routers") routers: Router[]
   ) {
+    this.fastify.register(cors, {
+      origin: (origin, callback) => {
+        callback(null, true);
+      },
+      methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos permitidos
+    });
+
     for (const router of routers) {
       this.fastify.register(router.load(), { prefix: router.prefix })
     }

@@ -19,6 +19,7 @@ export default class BranchAggregate extends BaseAggregate {
                 this.branchEntity.applyStateTransition(BranchStateType.OCCUPIED);
                 break;
             case CALLS_TYPE_EVENTS_NAMES.END_ATTENDANCE:
+            case CALLS_TYPE_EVENTS_NAMES.BLOCKAGE:
                 this.branchEntity.applyStateTransition(BranchStateType.LOGGED_IN);
                 break;
         }

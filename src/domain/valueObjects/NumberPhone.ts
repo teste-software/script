@@ -6,7 +6,7 @@ export class NumberPhone extends ValueObject {
 
     constructor(value: string) {
         super()
-        const regex = /^(\+?\d{2,3})?(\d{10,11})$/;
+        const regex = /^\d/;
         if (!regex.test(value)) {
             this.logError(ValueObjectErrorDetail.PHONE_NUMBER, ErrorName.INVALID_DATA, "Número de Telefone não aceito como número");
         }

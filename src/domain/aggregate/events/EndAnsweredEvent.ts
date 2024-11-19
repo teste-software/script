@@ -1,5 +1,4 @@
 import {AggregateEvent} from "./AggregateEvent";
-import CallAggregate from "../CallAggregate";
 import {ClientId} from "../../valueObjects/ClientId";
 import {QueueId} from "../../valueObjects/QueueId";
 import {QueueName} from "../../valueObjects/QueueName";
@@ -16,16 +15,16 @@ export interface EventAnsweredDomain {
     queueName: QueueName,
     callWaitingTime: CallWaitingTime,
     typeCall: 'receptive' | 'internal' | 'active',
-    phoneOrigin: NumberPhone,
+    phoneOrigin?: NumberPhone,
     destinationBranchNumber?: BranchNumber,
     sourceBranchNumber?: BranchNumber,
     callAttendanceTime: CallAttendanceTime,
-    branchAttendanceTime: BranchAttendanceTime
+    branchAttendanceTime?: BranchAttendanceTime
 }
 
 export class EndAnsweredEventAggregate extends AggregateEvent {
     NAME_EVENT = CALLS_TYPE_EVENTS_NAMES.END_ATTENDANCE
-    private _event = {} as EventAnsweredDomain;
+    protected _event = {} as EventAnsweredDomain;
     NEXT_EVENTS_ALLOWED = [];
 
     constructor(eventData: Event) {
@@ -54,11 +53,11 @@ export class EndAnsweredEventAggregate extends AggregateEvent {
             queueName: this._event.queueName.getValue(),
             callWaitingTime: this._event.callWaitingTime.getValue(),
             typeCall: this._event.typeCall,
-            phoneOrigin: this._event.phoneOrigin.getValue(),
+            phoneOrigin: this._event.phoneOrigin?.getValue(),
             destinationBranchNumber: this._event.destinationBranchNumber?.getValue(),
             sourceBranchNumber: this._event.sourceBranchNumber?.getValue(),
             callAttendanceTime: this._event.callAttendanceTime.getValue(),
-            branchAttendanceTime: this._event.branchAttendanceTime.getValue()
+            branchAttendanceTime: this._event.branchAttendanceTime?.getValue()
         };
     };
 

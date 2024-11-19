@@ -16,14 +16,14 @@ export interface EventAnsweredDomain {
     callWaitingTime: CallWaitingTime,
     callUraTime: CallUraTime,
     typeCall: 'receptive' | 'internal' | 'active',
-    phoneOrigin: NumberPhone,
+    phoneOrigin?: NumberPhone,
     destinationBranchNumber?: BranchNumber,
     sourceBranchNumber?: BranchNumber,
 }
 
 
 export class AnsweredEventAggregate extends AggregateEvent {
-    private _event = {} as EventAnsweredDomain;
+    protected _event = {} as EventAnsweredDomain;
     NAME_EVENT = CALLS_TYPE_EVENTS_NAMES.ATTENDANCE
     NEXT_EVENTS_ALLOWED = [CALLS_TYPE_EVENTS_NAMES.END_ATTENDANCE];
 
@@ -53,7 +53,7 @@ export class AnsweredEventAggregate extends AggregateEvent {
             callWaitingTime: this._event.callWaitingTime.getValue(),
             callUraTime: this._event.callUraTime.getValue(),
             typeCall: this._event.typeCall,
-            phoneOrigin: this._event.phoneOrigin.getValue(),
+            phoneOrigin: this._event.phoneOrigin?.getValue(),
             destinationBranchNumber: this._event.destinationBranchNumber?.getValue(),
             sourceBranchNumber: this._event.sourceBranchNumber?.getValue(),
         };

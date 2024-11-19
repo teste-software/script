@@ -73,7 +73,12 @@ export default class PbxCentralHistoriesSchema {
                 $in: [
                     'DISCAGEM',
                     'ATENDIMENTO',
-                    'FIMATENDIMENTO'
+                    'FIMATENDIMENTO',
+                    'BLOQUEIO',
+                    'CALLBACK',
+                    'FIMURA',
+                    'SELECAOURA',
+                    'FINALIZACAO'
                 ]
             }
         };

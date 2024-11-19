@@ -7,6 +7,11 @@ import newDbFactory, {ReadStrategy} from './infrastructure/db/index';
 import DialingEventService from "./domain/services/events/DialingEventService";
 import AnsweredEventService from "./domain/services/events/AnsweredEventService";
 import EndAnsweredEventService from "./domain/services/events/EndAnsweredEventService";
+import BlockageEventService from "./domain/services/events/BlockageEventService";
+import CallbackEventService from "./domain/services/events/CallbackEventService";
+import EndIVREventService from "./domain/services/events/EndIVREventService";
+import SelectionIVREventService from "./domain/services/events/SelectionIVREventService";
+import FinalizationEventService from "./domain/services/events/FinalizationEventService";
 
 enum Scope {
     TRANSIENT,
@@ -51,6 +56,16 @@ export default async function createContainer() {
                 return container.get(AnsweredEventService)
             case 'FIMATENDIMENTO':
                 return container.get(EndAnsweredEventService)
+            case 'BLOQUEIO':
+                return container.get(BlockageEventService)
+            case 'CALLBACK':
+                return container.get(CallbackEventService)
+            case 'FIMURA':
+                return container.get(EndIVREventService)
+            case 'SELECAOURA':
+                return container.get(SelectionIVREventService)
+            case 'SELECAOURA':
+                return container.get(FinalizationEventService)
             default:
                 throw new Error(`Serviço '${name}' não encontrado no contêiner.`);
         }

@@ -5,13 +5,19 @@ import {CustomError, ErrorName, ObjectErrorType, ValueObjectErrorDetail} from ".
 export class BaseAggregate {
     protected errorLogs: CustomError[] = [];
 
-    protected logError(valueObject: ValueObjectErrorDetail,errorName: ErrorName, message: string, eventType?: CALLS_TYPE_EVENTS_NAMES | BRANCHES_TYPE_EVENTS_NAMES) {
+    public logError(
+        valueObject: ValueObjectErrorDetail,
+        errorName: ErrorName,
+        message: string,
+        eventType?: CALLS_TYPE_EVENTS_NAMES | BRANCHES_TYPE_EVENTS_NAMES,
+        callId?: string
+    ) {
         const objectContextError = {
             category: ObjectErrorType.AGGREGATE,
             detail: valueObject,
             eventType: eventType
         }
-        this.errorLogs.push(new CustomError(objectContextError, errorName, message));
+        this.errorLogs.push(new CustomError(objectContextError, errorName, message, callId));
     }
 
     public getErrors(): string[] {

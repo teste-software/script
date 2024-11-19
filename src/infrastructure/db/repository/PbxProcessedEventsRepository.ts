@@ -10,6 +10,14 @@ export default class PbxProcessedEventsRepository {
     ) {
     }
 
+    async getProcessedByCallIdAndClient(callId: string, clientId: string) {
+        return await this.pbxProcessedEventsSchema.find(callId, clientId);
+    }
+
+    async getProcessedByDate(clientId: string, startDate: string, endDate: string) {
+        return await this.pbxProcessedEventsSchema.findByDate(clientId, new Date(startDate), new Date(endDate));
+    }
+
     async saveProcessedEvent(callSession: CallSession) {
         const callAggregate = callSession.call;
         const branchesAggregates = Object.values(callSession.branches)
@@ -39,7 +47,10 @@ export default class PbxProcessedEventsRepository {
             })),
             events: callSession.events.map((eventAggregate) => ({
                 name_event: eventAggregate.NAME_EVENT,
-                parameters: eventAggregate.toSummary(),
+                parameters: {
+                    values: eventAggregate.toSummary(),
+                    errorLog: eventAggregate.getErrorsParameters(),
+                },
                 errorLog: eventAggregate.getErrors(),
             }))
         }

@@ -21,9 +21,12 @@ export interface EventDialingDomain {
 }
 
 export class DialingEventAggregate extends AggregateEvent {
-    private _event = {} as EventDialingDomain
+    protected _event = {} as EventDialingDomain
     NAME_EVENT = CALLS_TYPE_EVENTS_NAMES.DIALING
-    NEXT_EVENTS_ALLOWED = [CALLS_TYPE_EVENTS_NAMES.ATTENDANCE, CALLS_TYPE_EVENTS_NAMES.END_ATTENDANCE]
+    NEXT_EVENTS_ALLOWED = [
+        CALLS_TYPE_EVENTS_NAMES.ATTENDANCE, CALLS_TYPE_EVENTS_NAMES.END_ATTENDANCE,
+        CALLS_TYPE_EVENTS_NAMES.BLOCKAGE
+    ]
 
     constructor(eventData: Event) {
         super(eventData);
