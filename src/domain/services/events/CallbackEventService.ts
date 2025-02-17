@@ -17,7 +17,8 @@ export default class CallbackEventService extends EventService {
         const callSession = this.callRepositoryDomain.getCall(callId, clientId);
         const eventAggregate = new CallbackEventAggregate(event);
 
-        this.validateNextEvent(callSession.lastEvent!, eventAggregate);
+        const finishedProcess = this.validateNextEvent(callSession.lastEvent!, eventAggregate);
+        if (!finishedProcess) return callSession;
 
         const callAggregate = callSession.call;
         callAggregate.forwardingToQueue(eventAggregate.event.queueId.getValue(), eventAggregate.NAME_EVENT);

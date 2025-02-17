@@ -1,20 +1,16 @@
 import 'reflect-metadata';
-import path from 'path';
-import fs from 'fs';
-import dotenv from 'dotenv';
+import './boot/config';
 import createContainer from "./container";
-import FastifyServer from "./infrastructure/http/Server";
+import config from 'config';
+import HttpServer from "./infrastructure/http/Server";
+import CronJob from "./infrastructure/cron";
 
 (async () => {
-    dotenv.config({ path: path.join(__dirname, '../.env') });
-    if (fs.existsSync(`/etc/mongod/55telecom.env.${process.env.NODE_ENV}`)) {
-        dotenv.config({
-            path: path.resolve(`/etc/mongod/55telecom.env.${process.env.NODE_ENV}`),
-        });
-    }
 
     const container = await createContainer();
-    const server = container.get(FastifyServer);
+    const cron = container.get(CronJob);
+    const server = container.get(HttpServer);
 
-    server.start();
+    server.createServerAndListen(config.get("server.https.port"));
+    // cron.start();
 })()

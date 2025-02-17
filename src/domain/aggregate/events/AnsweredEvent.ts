@@ -16,7 +16,8 @@ export interface EventAnsweredDomain {
     callWaitingTime: CallWaitingTime,
     callUraTime: CallUraTime,
     typeCall: 'receptive' | 'internal' | 'active',
-    phoneOrigin?: NumberPhone,
+    sourcePhone?: NumberPhone,
+    destinationPhone?: NumberPhone,
     destinationBranchNumber?: BranchNumber,
     sourceBranchNumber?: BranchNumber,
 }
@@ -53,7 +54,8 @@ export class AnsweredEventAggregate extends AggregateEvent {
             callWaitingTime: this._event.callWaitingTime.getValue(),
             callUraTime: this._event.callUraTime.getValue(),
             typeCall: this._event.typeCall,
-            phoneOrigin: this._event.phoneOrigin?.getValue(),
+            sourcePhone: this._event.sourcePhone?.getValue(),
+            destinationPhone: this._event.destinationPhone?.getValue(),
             destinationBranchNumber: this._event.destinationBranchNumber?.getValue(),
             sourceBranchNumber: this._event.sourceBranchNumber?.getValue(),
         };
@@ -104,7 +106,7 @@ export class AnsweredEventAggregate extends AggregateEvent {
         const typeCall = this._event.queueId.getTypeQueue();
         this._event.typeCall = typeCall;
         if (typeCall === 'active') {
-            this._event.phoneOrigin =  new NumberPhone(this.eventEntity.originator);
+            this._event.destinationPhone =  new NumberPhone(this.eventEntity.originator);
             this._event.sourceBranchNumber = new BranchNumber(this.eventEntity.parameterZero);
         }
         if (typeCall === 'internal') {
@@ -112,7 +114,7 @@ export class AnsweredEventAggregate extends AggregateEvent {
             this._event.destinationBranchNumber = new BranchNumber(this.eventEntity.parameterZero);
         }
         if (typeCall === 'receptive') {
-            this._event.phoneOrigin = new NumberPhone(this.eventEntity.originator);
+            this._event.sourcePhone = new NumberPhone(this.eventEntity.originator);
             this._event.destinationBranchNumber = new BranchNumber(this.eventEntity.parameterZero);
         }
     }

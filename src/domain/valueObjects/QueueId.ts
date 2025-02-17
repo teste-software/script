@@ -1,6 +1,8 @@
 import ValueObject from "./index";
 import {ErrorName, ValueObjectErrorDetail} from "../../infrastructure/errors/CustomError";
 
+export type TYPE_QUEUE = 'internal' | 'receptive' | 'active'
+
 export class QueueId extends ValueObject {
     readonly value: string;
 
@@ -16,7 +18,7 @@ export class QueueId extends ValueObject {
         return this.value;
     }
 
-    getTypeQueue(): 'internal' | 'receptive' | 'active' {
+    getTypeQueue(): TYPE_QUEUE {
         if (this.value.includes('-ativo')) return 'active'
         if (this.value.includes('-ramal')) return 'internal'
         return 'receptive'

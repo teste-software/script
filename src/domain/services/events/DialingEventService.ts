@@ -5,6 +5,7 @@ import CallRepositoryDomain, {CallSession} from "../../repository/CallRepository
 import {DialingEventAggregate} from "../../aggregate/events/DialingEvent";
 import BranchAggregate from "../../aggregate/BranchAggregate";
 import {BranchNumber} from "../../valueObjects/BranchNumber";
+import {TYPE_QUEUE} from "../../valueObjects/QueueId";
 
 
 @injectable()
@@ -35,15 +36,15 @@ export default class DialingEventService extends EventService {
     private updateParticipantBranches(callId: string, clientId: string, eventAggregate: DialingEventAggregate) {
         const participantsBranches = eventAggregate.getCallParticipantsBranches();
 
-        const updateBranch = (branchNumber?: BranchNumber) => {
+        const updateBranch = (branchNumber?: BranchNumber, typeQueue?: TYPE_QUEUE) => {
             if (!branchNumber) return;
 
             const branchAggregate = new BranchAggregate(branchNumber.getValue());
-            branchAggregate.transitionStatus(eventAggregate.NAME_EVENT);
+            branchAggregate.transitionStatus(eventAggregate.NAME_EVENT, typeQueue);
             this.callRepositoryDomain.addCallWithParticipantBranches(callId, clientId, branchAggregate);
         };
 
-        updateBranch(participantsBranches.destinationBranchNumber);
         updateBranch(participantsBranches.sourceBranchNumber);
+        updateBranch(participantsBranches.destinationBranchNumber, eventAggregate.event.queueId.getTypeQueue());
     }
 }

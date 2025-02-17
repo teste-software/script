@@ -15,7 +15,8 @@ export interface EventDialingDomain {
     callWaitingTime: CallWaitingTime,
     callInputTime: CallInputTime,
     typeCall: 'receptive' | 'internal' | 'active',
-    phoneOrigin: NumberPhone,
+    destinationPhone?: NumberPhone,
+    sourcePhone?: NumberPhone,
     destinationBranchNumber?: BranchNumber,
     sourceBranchNumber?: BranchNumber,
 }
@@ -53,7 +54,8 @@ export class DialingEventAggregate extends AggregateEvent {
             callWaitingTime: this._event.callWaitingTime.getValue(),
             callInputTime: this._event.callInputTime.getValue(),
             typeCall: this._event.typeCall,
-            phoneOrigin: this._event.phoneOrigin.getValue(),
+            destinationPhone: this._event.destinationPhone?.getValue(),
+            sourcePhone: this._event.sourcePhone?.getValue(),
             destinationBranchNumber: this._event.destinationBranchNumber?.getValue(),
             sourceBranchNumber: this._event.sourceBranchNumber?.getValue(),
         };
@@ -104,16 +106,16 @@ export class DialingEventAggregate extends AggregateEvent {
 
         if (!isOriginatorBranchNumber) {
             this._event.typeCall = 'receptive';
-            this._event.phoneOrigin = new NumberPhone(this.eventEntity.originator);
-            this._event.destinationBranchNumber = new BranchNumber(this.eventEntity.parameterOne);
+            this._event.sourcePhone = new NumberPhone(this.eventEntity.originator);
+            this._event.destinationBranchNumber = new BranchNumber(this.eventEntity.parameterZero);
         } else if (isOriginatorBranchNumber && isParameterOneBranchNumber) {
             this._event.typeCall = 'internal';
             this._event.sourceBranchNumber = new BranchNumber(this.eventEntity.originator);
-            this._event.destinationBranchNumber = new BranchNumber(this.eventEntity.parameterOne);
+            this._event.destinationBranchNumber = new BranchNumber(this.eventEntity.parameterZero);
         } else if (isOriginatorBranchNumber && !isParameterOneBranchNumber) {
             this._event.typeCall = 'active';
             this._event.sourceBranchNumber = new BranchNumber(this.eventEntity.originator);
-            this._event.phoneOrigin = new NumberPhone(this.eventEntity.parameterOne);
+            this._event.destinationPhone = new NumberPhone(this.eventEntity.parameterZero);
         }
     }
 }

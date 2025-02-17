@@ -50,5 +50,4 @@ export default class AnsweredEventService extends EventService {
         updateBranch(participantsBranches.destinationBranchNumber);
         updateBranch(participantsBranches.sourceBranchNumber);
     }
-
 }

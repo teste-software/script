@@ -10,6 +10,10 @@ export default class PbxCentralHistoriesRepository {
     ) {
     }
 
+    async getCallIdsCron() {
+        return await this.pbxCentralHistoriesSchema.getCallIdLastDay();
+    }
+
     async getEventsByCallIdAndClient(call_id: string, client_id: string) {
         return await this.pbxCentralHistoriesSchema.findByCallId(call_id, client_id);
     }

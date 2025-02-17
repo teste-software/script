@@ -3,6 +3,7 @@ import CallAggregate from "../aggregate/CallAggregate";
 import BranchAggregate from "../aggregate/BranchAggregate";
 import {AggregateEvent} from "../aggregate/events/AggregateEvent";
 import PbxProcessedEventsRepository from "../../infrastructure/db/repository/PbxProcessedEventsRepository";
+import {Logger} from "winston";
 
 export interface CallSession {
     callId: string,
@@ -21,6 +22,7 @@ export default class CallRepositoryDomain {
 
     constructor(
         @inject(PbxProcessedEventsRepository) private processedEventsRepository: PbxProcessedEventsRepository,
+        @inject("logger") private logger: Logger
     ) {
     }
     callsAggregates = new Map<string, CallSession>()
@@ -49,6 +51,16 @@ export default class CallRepositoryDomain {
             this.deleteCall(callId, clientId);
         }
     }
+
+    forceFinishedCallSession(callId: string, clientId: string){
+        const key = `${callId}.${clientId}`
+        if (!this.callsAggregates.has(key)) return;
+
+        const callSession = this.callsAggregates.get(key)!;
+        this.processedEventsRepository.saveProcessedEvent(callSession);
+        this.deleteCall(callId, clientId);
+    }
+
 
     getCall(callId: string, clientId: string): CallSession {
         const key = `${callId}.${clientId}`

@@ -15,7 +15,8 @@ export interface EventAnsweredDomain {
     queueName: QueueName,
     callWaitingTime: CallWaitingTime,
     typeCall: 'receptive' | 'internal' | 'active',
-    phoneOrigin?: NumberPhone,
+    sourcePhone?: NumberPhone,
+    destinationPhone?: NumberPhone,
     destinationBranchNumber?: BranchNumber,
     sourceBranchNumber?: BranchNumber,
     callAttendanceTime: CallAttendanceTime,
@@ -25,7 +26,7 @@ export interface EventAnsweredDomain {
 export class EndAnsweredEventAggregate extends AggregateEvent {
     NAME_EVENT = CALLS_TYPE_EVENTS_NAMES.END_ATTENDANCE
     protected _event = {} as EventAnsweredDomain;
-    NEXT_EVENTS_ALLOWED = [];
+    NEXT_EVENTS_ALLOWED = [CALLS_TYPE_EVENTS_NAMES.END_CALL];
 
     constructor(eventData: Event) {
         super(eventData);
@@ -53,7 +54,8 @@ export class EndAnsweredEventAggregate extends AggregateEvent {
             queueName: this._event.queueName.getValue(),
             callWaitingTime: this._event.callWaitingTime.getValue(),
             typeCall: this._event.typeCall,
-            phoneOrigin: this._event.phoneOrigin?.getValue(),
+            sourcePhone: this._event.sourcePhone?.getValue(),
+            destinationPhone: this._event.destinationPhone?.getValue(),
             destinationBranchNumber: this._event.destinationBranchNumber?.getValue(),
             sourceBranchNumber: this._event.sourceBranchNumber?.getValue(),
             callAttendanceTime: this._event.callAttendanceTime.getValue(),
@@ -112,7 +114,7 @@ export class EndAnsweredEventAggregate extends AggregateEvent {
         this._event.typeCall = typeCall;
         switch (typeCall) {
             case 'receptive':
-                this._event.phoneOrigin = new NumberPhone(this.eventEntity.originator);
+                this._event.sourcePhone = new NumberPhone(this.eventEntity.originator);
                 this._event.destinationBranchNumber = new BranchNumber(this.eventEntity.parameterNine);
                 this._event.callWaitingTime = new CallWaitingTime(this.eventEntity.parameterTwo);
                 break;
@@ -125,7 +127,7 @@ export class EndAnsweredEventAggregate extends AggregateEvent {
 
             case 'active':
                 this._event.sourceBranchNumber = new BranchNumber(this.eventEntity.parameterNine);
-                this._event.phoneOrigin = new NumberPhone(this.eventEntity.originator);
+                this._event.destinationPhone = new NumberPhone(this.eventEntity.originator);
                 this._event.callWaitingTime = new CallWaitingTime(this.eventEntity.parameterTwo);
                 this._event.branchAttendanceTime = new BranchAttendanceTime(this.eventEntity.parameterOne);
                 break;

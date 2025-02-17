@@ -20,6 +20,10 @@ export default class EventEntity {
         return this.event.event;
     }
 
+    get centralId() {
+        return this.event.central_id;
+    }
+
     get clientId() {
         return this.event.client_id
     }
@@ -54,6 +58,26 @@ export default class EventEntity {
 
     get parameterThree() {
         return this.event.data3
+    }
+
+    get parameterFour() {
+        return this.event.data4
+    }
+
+    get parameterFive() {
+        return this.event.data5
+    }
+
+    get parameterSix() {
+        return this.event.data6
+    }
+
+    get parameterSeven() {
+        return this.event.data7
+    }
+
+    get parameterEight() {
+        return this.event.data8
     }
 
     get parameterNine() {

@@ -24,7 +24,8 @@ export enum ValueObjectErrorDetail {
     QUEUE_ID = 'ID da Fila',
     QUEUE_NAME = 'Nome da Fila',
     CALL_STATE='Estado da ligação',
-    BRANCH_STATE='Estado do ramal'
+    BRANCH_STATE='Estado do ramal',
+    CALL_ID_MONITORING='Call Id Ligação Monitorada'
 }
 
 export enum ErrorName {

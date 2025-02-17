@@ -40,7 +40,6 @@ export default class PbxProcessedEventsSchema {
 
     async save(data: { [k: string]: any }) {
         const document = {
-            "_id": new ObjectId(),
             "call_id": data.call_id,
             "client_id": data.client_id,
             "call": data.call,
@@ -57,29 +56,30 @@ export default class PbxProcessedEventsSchema {
         );
     }
 
-    async findByDate(client_id: string, start: Date, end: Date) {
-        return this.collection.find({ client_id, createdAt: {
+    async findByDate(client_id: string, start: Date, end: Date, onlyErrors?: boolean) {
+        return this.collection.find({ client_id, start_date: {
                 $gte: start,
                 $lte: end
-            },
-            $or: [
-                { "call.state": { $ne: "Finalizada" } },
-                { "call.errorLog": { $exists: true, $not: { $size: 0 } } },
-                { "branches.state": { $ne: "Logado" } },
-                { "branches.errorLog": { $exists: true, $not: { $size: 0 } } },
-                { "branches.histories_states.errorLog": { $exists: true, $not: { $size: 0 } } },
-                { "events.errorLog": { $exists: true, $not: { $size: 0 } } },
-                { "events.parameters.errorLog": { $exists: true, $not: { $size: 0 } } }
-            ]
-        }).toArray()
+            }
+            // ,
+            // $or: [
+                // { "call.state": { $ne: "Finalizada" } },
+                // { "call.errorLog": { $exists: true, $not: { $size: 0 } } },
+
+                // { "branches.errorLog": { $exists: true, $not: { $size: 0 } } },
+                // { "branches.histories_states.errorLog": { $exists: true, $not: { $size: 0 } } },
+                // { "events.errorLog": { $exists: true, $not: { $size: 0 } } },
+                // { "events.parameters.errorLog": { $exists: true, $not: { $size: 0 } } }
+            // ]
+        }).limit(20).toArray()
     }
-    async find(call_id: string, client_id: string): Promise<PbxProcessedEvents[] | null> {
+    async find(call_id: string, client_id: string, onlyErrors?: boolean): Promise<PbxProcessedEvents[] | null> {
         return this.collection.find({
             call_id,
             client_id,
             $or: [
                 // Verifica se o estado da chamada principal não é "Finalizada"
-                { "call.state": { $ne: "Finalizada" } },
+                // { "call.state": { $ne: "Finalizada" } },
 
                 // Verifica se o errorLog da chamada principal não está vazio
                 { "call.errorLog": { $exists: true, $not: { $size: 0 } } },

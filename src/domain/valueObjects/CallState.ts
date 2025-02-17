@@ -28,9 +28,12 @@ export class CallState extends ValueObject {
 
     canTransitionTo(nextState: CallStateType): boolean {
         const allowedTransitions: { [key in CallStateType]?: CallStateType[] } = {
-            [CallStateType.PENDING]: [CallStateType.CALLING],
-            [CallStateType.CALLING]: [CallStateType.IN_ATTENDANCE, CallStateType.FINISHED],
-            [CallStateType.IN_ATTENDANCE]: [CallStateType.FINISHED]
+            [CallStateType.PENDING]: [CallStateType.CALLING, CallStateType.IN_URA],
+            [CallStateType.IN_URA]: [CallStateType.IN_QUEUE, CallStateType.FINISHED, CallStateType.IN_URA],
+            [CallStateType.IN_QUEUE]: [CallStateType.CALLING, CallStateType.IN_QUEUE, CallStateType.FINISHED],
+            [CallStateType.CALLING]: [CallStateType.IN_ATTENDANCE, CallStateType.FINISHED, CallStateType.CALLING, CallStateType.IN_QUEUE],
+            [CallStateType.IN_ATTENDANCE]: [CallStateType.FINISHED],
+            [CallStateType.FINISHED]: [CallStateType.FINISHED]
         };
 
         const isAllowedTransition =  allowedTransitions[this.state]?.includes(nextState);

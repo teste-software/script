@@ -1,8 +1,8 @@
-import {BRANCHES_TYPE_EVENTS_NAMES, CALLS_TYPE_EVENTS_NAMES} from "../types/EventTypes";
+import {CALLS_TYPE_EVENTS_NAMES} from "../types/EventTypes";
 import Branch from "../entities/Branch";
 import {BranchStateType} from "../valueObjects/BranchState";
 import {BaseAggregate} from "./index";
-import {BranchNumber} from "../valueObjects/BranchNumber";
+import {TYPE_QUEUE} from "../valueObjects/QueueId";
 
 export default class BranchAggregate extends BaseAggregate {
     readonly branchEntity: Branch;
@@ -12,13 +12,28 @@ export default class BranchAggregate extends BaseAggregate {
         this.branchEntity = new Branch(branchNumber);
     }
 
-    transitionStatus(nameEvent: CALLS_TYPE_EVENTS_NAMES) {
+    transitionStatus(nameEvent: CALLS_TYPE_EVENTS_NAMES, typeQueue?: TYPE_QUEUE) {
         switch (nameEvent) {
+            case CALLS_TYPE_EVENTS_NAMES.TRANSFER:
+                if (typeQueue === 'active') this.branchEntity.applyStateTransition(BranchStateType.OCCUPIED);
+                else this.branchEntity.applyStateTransition(BranchStateType.CALLING);
+                break;
+
+            case CALLS_TYPE_EVENTS_NAMES.ENTER_IVR:
+                this.branchEntity.applyStateTransition(BranchStateType.OCCUPIED);
+                break;
+            case CALLS_TYPE_EVENTS_NAMES.CALL_AGENT:
             case CALLS_TYPE_EVENTS_NAMES.DIALING:
+                this.branchEntity.applyStateTransition(BranchStateType.CALLING);
+                break;
+            case CALLS_TYPE_EVENTS_NAMES.ENTER_QUEUE:
             case CALLS_TYPE_EVENTS_NAMES.ATTENDANCE:
                 this.branchEntity.applyStateTransition(BranchStateType.OCCUPIED);
                 break;
+            case CALLS_TYPE_EVENTS_NAMES.REFUSAL:
+            case CALLS_TYPE_EVENTS_NAMES.END_QUEUE_TRANSFER:
             case CALLS_TYPE_EVENTS_NAMES.END_ATTENDANCE:
+            case CALLS_TYPE_EVENTS_NAMES.END_CALL:
             case CALLS_TYPE_EVENTS_NAMES.BLOCKAGE:
                 this.branchEntity.applyStateTransition(BranchStateType.LOGGED_IN);
                 break;

@@ -36,7 +36,7 @@ export default abstract class EventService extends BaseService {
         }
     }
 
-    protected validateNextEvent(lastEventAggregate: AggregateEvent, currentEventAggregate: AggregateEvent): void {
+    protected validateNextEvent(lastEventAggregate: AggregateEvent, currentEventAggregate: AggregateEvent): void | boolean {
         if (!lastEventAggregate?.NEXT_EVENTS_ALLOWED?.includes(currentEventAggregate.NAME_EVENT)) {
             currentEventAggregate.logError(
                 ValueObjectErrorDetail.EVENT,
@@ -46,10 +46,10 @@ export default abstract class EventService extends BaseService {
                 currentEventAggregate?.eventEntity.callId
             );
         }
-        this.validateSequence(lastEventAggregate, currentEventAggregate);
+        return this.validateSequence(lastEventAggregate, currentEventAggregate);
     }
 
-    private validateSequence(lastEventAggregate: AggregateEvent, currentEventAggregate: AggregateEvent): void {
+    private validateSequence(lastEventAggregate: AggregateEvent, currentEventAggregate: AggregateEvent): void | boolean {
         const lastSequenceId = lastEventAggregate?.eventEntity.sequenceId;
         const currentSequenceId = currentEventAggregate?.eventEntity.sequenceId;
         if (currentSequenceId !== lastSequenceId + 1) {
@@ -61,6 +61,18 @@ export default abstract class EventService extends BaseService {
                 currentEventAggregate?.eventEntity.callId
             );
         }
+        if (currentSequenceId === lastSequenceId) {
+            currentEventAggregate.logError(
+                ValueObjectErrorDetail.EVENT,
+                ErrorName.INVALID_SEQUENCE_ID,
+                `O sequence Id ${currentSequenceId} já foi processado`,
+                currentEventAggregate?.NAME_EVENT,
+                currentEventAggregate?.eventEntity.callId
+            )
+
+            return false;
+        }
+        return true;
     }
 
     abstract processEvent(callId: string, clientId: string, event: Event): CallSession

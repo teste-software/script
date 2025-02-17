@@ -12,7 +12,7 @@ export interface EventFinalizationDomain {
 }
 
 export class FinalizationEventAggregate extends AggregateEvent {
-    NAME_EVENT = CALLS_TYPE_EVENTS_NAMES.END_IVR;
+    NAME_EVENT = CALLS_TYPE_EVENTS_NAMES.FINALIZATION;
     protected _event = {} as EventFinalizationDomain;
     NEXT_EVENTS_ALLOWED = [];
 

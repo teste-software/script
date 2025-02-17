@@ -65,20 +65,85 @@ export default class PbxCentralHistoriesSchema {
         this.collection = this.dbClientLog.collection('pbx.central.histories');
     }
 
+    async getCallIdLastDay() {
+        const last24Hours = new Date();
+        last24Hours.setHours(last24Hours.getHours() - 24);
+
+        const pipeline = [
+            {
+                $match: {
+                    time: { $gte: last24Hours },
+                    event: {
+                        $in: [
+                            'ATENDIMENTO',
+                            'BLOQUEIO',
+                            'CHAMAAGENTE',
+                            'CALLBACK',
+                            'DISCAGEM',
+                            'FIMATENDIMENTO',
+                            'FIMURA',
+                            'FIMMONITORIA',
+                            'FIMFILATRANSFERENCIA',
+                            'FIMURATRANSFERENCIA',
+                            'FIMCHAMADA',
+                            'ENTRAURA',
+                            'ENTRAFILA',
+                            'FINALIZACAO',
+                            'MONITORIA',
+                            'RECUSA',
+                            'RETORNOURA',
+                            'SELECAOURA',
+                            'TRANSFERENCIA',
+                            'TRANSBORDO',
+                            'TRANSFERENCIAFILA',
+                            'TRANSFERENCIAURA',
+                        ]
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: "$call_id", // Agrupa por call_id para evitar duplicados
+                    client_id: { $first: "$client_id" }, // Mantém apenas um client_id associado
+                    last_time: { $max: "$time" } // Pega o último horário do call_id
+                }
+            },
+            {
+                $sort: { last_time: -1 } // Ordena do mais recente para o mais antigo
+            }
+        ];
+
+        return await this.collection.aggregate(pipeline).toArray();
+    }
+
     async findByCallId(call_id: string, client_id: string): Promise<PbxCentralHistories[]> {
         const query = {
             client_id: client_id,
             call_id: call_id,
             event: {
                 $in: [
-                    'DISCAGEM',
                     'ATENDIMENTO',
-                    'FIMATENDIMENTO',
                     'BLOQUEIO',
+                    'CHAMAAGENTE',
                     'CALLBACK',
+                    'DISCAGEM',
+                    'FIMATENDIMENTO',
                     'FIMURA',
+                    'FIMMONITORIA',
+                    'FIMFILATRANSFERENCIA',
+                    'FIMURATRANSFERENCIA',
+                    'FIMCHAMADA',
+                    'ENTRAURA',
+                    'ENTRAFILA',
+                    'FINALIZACAO',
+                    'MONITORIA',
+                    'RECUSA',
+                    'RETORNOURA',
                     'SELECAOURA',
-                    'FINALIZACAO'
+                    'TRANSFERENCIA',
+                    'TRANSBORDO',
+                    'TRANSFERENCIAFILA',
+                    'TRANSFERENCIAURA',
                 ]
             }
         };

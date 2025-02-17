@@ -10,12 +10,27 @@ export default class PbxProcessedEventsRepository {
     ) {
     }
 
-    async getProcessedByCallIdAndClient(callId: string, clientId: string) {
-        return await this.pbxProcessedEventsSchema.find(callId, clientId);
+
+    async getReportCallsByDate(
+        startDate: string,
+        startTime: string,
+        endDate: string,
+        endTime: string,
+        selectedClient: string,
+        onlyErrors: boolean,
+    ) {
+        const start = new Date(`${startDate}T${startTime}:00.000Z`);
+        const end = new Date(`${endDate}T${endTime}:00.000Z`);
+
+        return await this.pbxProcessedEventsSchema.findByDate(selectedClient, start, end, onlyErrors);
     }
 
-    async getProcessedByDate(clientId: string, startDate: string, endDate: string) {
-        return await this.pbxProcessedEventsSchema.findByDate(clientId, new Date(startDate), new Date(endDate));
+    async getReportCallsByCallId(
+        callId: string,
+        selectedClient: string,
+        onlyErrors: boolean,
+    ) {
+        return await this.pbxProcessedEventsSchema.find(callId, selectedClient, onlyErrors);
     }
 
     async saveProcessedEvent(callSession: CallSession) {

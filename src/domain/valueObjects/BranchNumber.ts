@@ -18,7 +18,6 @@ export class BranchNumber  extends ValueObject {
 
     static isCheckBranchNumber(value: string) {
         return !(value.length !== 4 && value.length !== 6);
-
     }
 }
 
