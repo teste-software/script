@@ -1,17 +1,16 @@
 import {inject, injectable} from "inversify";
-import { EventPbxCentralHistoriesDTO } from "../dtos/EventDTO";
+import { EventRaw } from "../dtos/events";
 import {EventMapper} from "../mappers/EventMapper";
-import EventService from "../../domain/services/events/EventService";
 import CallRepositoryDomain from "../../domain/repository/CallRepositoryDomain";
 import {Logger} from "winston";
+import EventsService from "../../domain/services/EventsService";
 
 
 @injectable()
 export default class ValidateEventsUseCase {
-
   constructor(
-      @inject('getServiceEventByName') private getServiceEventByName: (name: string) => EventService,
       @inject(CallRepositoryDomain) private callRepositoryDomain: CallRepositoryDomain,
+      @inject('getEventsService') private getEventsService: () => EventsService,
       @inject("logger") private logger: Logger
   ) {
     this.logger.child({
@@ -19,19 +18,19 @@ export default class ValidateEventsUseCase {
     })
   }
 
-  execute(callId: string, clientId: string, eventsData: EventPbxCentralHistoriesDTO[]) {
-    let eventsDomain = eventsData.map((dto) => EventMapper.toDomain(dto))
-    eventsDomain = eventsDomain.sort((a, b) => parseInt(a.sequence_id) - parseInt(b.sequence_id));
+  // @to-do Remover fila de redirecionamento
+  execute(callId: string, clientId: string, eventsRaw: EventRaw[]) {
+    let eventsDomain = eventsRaw.map((dto) => EventMapper.toDomain(dto))
+    eventsDomain = eventsDomain.sort((a, b) => a.sequenceId - b.sequenceId);
 
+    const eventsService = this.getEventsService();
     this.logger.info(`Inicializando processameto da ligação: ${callId} | ClientId: ${clientId} | Com os seguintes eventos: ${eventsDomain.map((evento) => evento.event)}`)
     try {
-      for (let index = 0; index < eventsDomain.length; index++) {
-        const event = eventsDomain[index];
+      eventsDomain.forEach(event => {
+        eventsService.processEvent(event);
+      })
 
-        const service = this.getServiceEventByName(event.event);
-        service.processEvent(callId, clientId, event);
-      }
-      this.callRepositoryDomain.forceFinishedCallSession(callId, clientId);
+      return eventsService.finishedCallSession(callId, clientId);
     } catch (error: unknown) {
       this.logger.error(error);
       if (error instanceof Error) {

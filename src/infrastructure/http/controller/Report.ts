@@ -23,6 +23,7 @@ export default class ReportController {
 
     async getReportCalls(request: Request, response: Response) {
         try {
+            console.log('--- auqi?', request.body)
             const {
                 startDate,
                 startTime,
@@ -34,6 +35,7 @@ export default class ReportController {
             } = request.body;
 
             if (callId) {
+                console.log('--- auqi?', callId)
                 const calls = await this.pbxProcessedEventsRepository.getReportCallsByCallId(
                     callId,
                     selectedClient,

@@ -54,7 +54,6 @@ export class CustomError extends Error {
         this.errorName = errorName;
 
         this.name = `${objectContext.category}-${errorName}`;
-
         console.log(this.getFormattedError())
     }
 

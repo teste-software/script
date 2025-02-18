@@ -10,7 +10,6 @@ export default class PbxProcessedEventsRepository {
     ) {
     }
 
-
     async getReportCallsByDate(
         startDate: string,
         startTime: string,
@@ -33,42 +32,44 @@ export default class PbxProcessedEventsRepository {
         return await this.pbxProcessedEventsSchema.find(callId, selectedClient, onlyErrors);
     }
 
-    async saveProcessedEvent(callSession: CallSession) {
+    saveProcessedEvent(callSession: CallSession) {
         const callAggregate = callSession.call;
         const branchesAggregates = Object.values(callSession.branches)
 
         const data = {
             call_id: callSession.callId,
             client_id: callSession.clientId,
-            call: {
-                 queue_id: callAggregate.getQueueId(),
-                 histories_states: callAggregate.callEntity.historiesStates.map((history) => ({
-                     state: history.state,
-                     errorLog: history.getErrors()
-                 })),
-                 state: callAggregate.callEntity.getState(),
-                 errorLog: callAggregate.getErrors()
-            },
             start_date: callSession.startDate,
+            errors: callSession.errors.map((error) => error.getFormattedError()),
+            lock_call: callSession.lockCall,
+            events: callSession.events.map((event) => {
+                return {
+                    event: event.event,
+                    errors: event.errors.map((error) => error.getFormattedError())
+                }
+            }),
+            call: {
+                queue_id: callAggregate.getQueueId(),
+                client_id: callAggregate.getClientId(),
+                state: callAggregate.callEntity.getState(),
+                errors: callAggregate.getErrors(),
+                histories_states: {
+                    histories: callAggregate.callEntity.historiesStates,
+                    errors: callAggregate.callEntity.getErrors()
+                },
+            },
             branches: branchesAggregates.map((aggregate) => ({
                 branch_number: aggregate.branchEntity.getBranchNumber(),
-                histories_states: aggregate.branchEntity.historiesStates.map((history) => ({
-                    state: history.state,
-                    errorLog: history.getErrors()
-                })),
-                state: aggregate.branchEntity.getState(),
-                errorLog: aggregate.getErrors()
-
-            })),
-            events: callSession.events.map((eventAggregate) => ({
-                name_event: eventAggregate.NAME_EVENT,
-                parameters: {
-                    values: eventAggregate.toSummary(),
-                    errorLog: eventAggregate.getErrorsParameters(),
+                histories_states: {
+                    errors: callAggregate.callEntity.getErrors(),
+                    histories: aggregate.branchEntity.historiesStates
                 },
-                errorLog: eventAggregate.getErrors(),
-            }))
+                state: aggregate.branchEntity.getState(),
+                errors: aggregate.getErrors()
+            })),
         }
-        return await this.pbxProcessedEventsSchema.save(data);
+
+        this.pbxProcessedEventsSchema.save(data).then();
+        return data;
     }
 }

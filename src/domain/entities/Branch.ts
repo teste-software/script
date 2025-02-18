@@ -1,29 +1,52 @@
-import {BranchStateType, BranchState} from "../valueObjects/BranchState";
-import {BranchNumber} from "../valueObjects/BranchNumber";
+import {ErrorName, ValueObjectErrorDetail} from "../../infrastructure/errors/CustomError";
+import Entity from "./index";
 
-export default class Branch {
-    private readonly branchNumber: BranchNumber;
-    // @TO-DO O estado inicial deve ser pego no banco, mas como agora é apenas checar, será feito o branch_number
-    private state: BranchState = new BranchState(BranchStateType.LOGGED_IN);
-    public historiesStates: BranchState[] = [ ];
+export enum BranchStateType {
+    LOGGED_IN = 'Logado',
+    LOGGED_OUT = 'Deslogado',
+    PAUSED = 'Pausado',
+    OCCUPIED = 'Ocupado',
+    CALLING = 'Chamando',
+}
+
+export default class Branch extends Entity {
+    private readonly branchNumber: string;
+    private state: BranchStateType = BranchStateType.LOGGED_IN;
+    public historiesStates: BranchStateType[] = [ ];
 
     constructor(branchNumber: string) {
-        this.branchNumber = new BranchNumber(branchNumber);
+        super()
+        this.branchNumber = branchNumber;
     }
 
     applyStateTransition(nextStateType: BranchStateType) {
-        this.state.canTransitionTo(nextStateType);
+        this.canTransitionTo(nextStateType);
 
-        const nextState = new BranchState(nextStateType);
-        this.historiesStates.push(nextState);
-        this.state = nextState;
+        this.historiesStates.push(nextStateType);
+        this.state = nextStateType;
     }
 
-    getState(): string {
-        return this.state.getValue()
+    getState(): BranchStateType {
+        return this.state;
     }
 
     getBranchNumber() {
-        return this.branchNumber.getValue();
+        return this.branchNumber;
+    }
+
+    canTransitionTo(nextState: BranchStateType): boolean {
+        const allowedTransitions: { [key in BranchStateType]?: BranchStateType[] } = {
+            [BranchStateType.LOGGED_IN]: [BranchStateType.LOGGED_IN, BranchStateType.OCCUPIED, BranchStateType.PAUSED, BranchStateType.LOGGED_OUT, BranchStateType.CALLING],
+            [BranchStateType.LOGGED_OUT]: [BranchStateType.LOGGED_IN],
+            [BranchStateType.PAUSED]: [BranchStateType.LOGGED_IN],
+            [BranchStateType.OCCUPIED]: [BranchStateType.LOGGED_IN, BranchStateType.PAUSED, BranchStateType.OCCUPIED],
+            [BranchStateType.CALLING]: [BranchStateType.OCCUPIED, BranchStateType.LOGGED_IN],
+        };
+
+        const isAllowedTransition = allowedTransitions[this.state]?.includes(nextState);
+        if (!isAllowedTransition) {
+            this.logError(ValueObjectErrorDetail.BRANCH_STATE, ErrorName.INVALID_TRANSITION, `Transição de estado inválida de ${this.getValue()} para ${nextState}`);
+        }
+        return isAllowedTransition ?? false
     }
 }

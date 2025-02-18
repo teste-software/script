@@ -65,13 +65,14 @@ export default class PbxCentralHistoriesSchema {
         this.collection = this.dbClientLog.collection('pbx.central.histories');
     }
 
-    async getCallIdLastDay() {
+    async getCallIdLastDay(clientId: string) {
         const last24Hours = new Date();
         last24Hours.setHours(last24Hours.getHours() - 24);
 
         const pipeline = [
             {
                 $match: {
+                    client_id: clientId,
                     time: { $gte: last24Hours },
                     event: {
                         $in: [
@@ -103,13 +104,13 @@ export default class PbxCentralHistoriesSchema {
             },
             {
                 $group: {
-                    _id: "$call_id", // Agrupa por call_id para evitar duplicados
-                    client_id: { $first: "$client_id" }, // Mantém apenas um client_id associado
-                    last_time: { $max: "$time" } // Pega o último horário do call_id
+                    _id: "$call_id",
+                    client_id: { $first: "$client_id" },
+                    last_time: { $max: "$time" }
                 }
             },
             {
-                $sort: { last_time: -1 } // Ordena do mais recente para o mais antigo
+                $sort: { last_time: -1 }
             }
         ];
 

@@ -1,18 +1,22 @@
 import {inject, injectable} from "inversify";
 import CallAggregate from "../aggregate/CallAggregate";
 import BranchAggregate from "../aggregate/BranchAggregate";
-import {AggregateEvent} from "../aggregate/events/AggregateEvent";
 import PbxProcessedEventsRepository from "../../infrastructure/db/repository/PbxProcessedEventsRepository";
 import {Logger} from "winston";
+import {InterfaceEventDTO} from "../../application/dtos/events";
+import {CustomError} from "../../infrastructure/errors/CustomError";
 
 export interface CallSession {
     callId: string,
     clientId: string,
+    lockCall: boolean,
     call: CallAggregate,
     branches: {[k: string]: BranchAggregate },
+    lastSequence: boolean,
     lastSequenceId: number,
-    events: AggregateEvent[],
-    lastEvent: AggregateEvent | null,
+    errors: CustomError[]
+    events: { event: InterfaceEventDTO, errors: CustomError[]}[],
+    lastEvent: InterfaceEventDTO | undefined,
     processing: boolean,
     startDate: Date
 }
@@ -35,30 +39,14 @@ export default class CallRepositoryDomain {
         callSession.branches[branchNumber] = branchAggregate;
     }
 
-    addCallWithNewEvent(callId: string, clientId: string, eventAggregate: AggregateEvent) {
-        const key = `${callId}.${clientId}`
-        const callSession = this.callsAggregates.get(key)!;
-
-        callSession.events.push(eventAggregate);
-        callSession.lastEvent = eventAggregate;
-        callSession.lastSequenceId = eventAggregate.eventEntity.sequenceId;
-        callSession.processing = true;
-
-        this.callsAggregates.set(key, callSession)
-
-        if (eventAggregate.eventEntity.lastSequence) {
-            this.processedEventsRepository.saveProcessedEvent(callSession);
-            this.deleteCall(callId, clientId);
-        }
-    }
-
     forceFinishedCallSession(callId: string, clientId: string){
         const key = `${callId}.${clientId}`
         if (!this.callsAggregates.has(key)) return;
 
         const callSession = this.callsAggregates.get(key)!;
-        this.processedEventsRepository.saveProcessedEvent(callSession);
         this.deleteCall(callId, clientId);
+
+        return this.processedEventsRepository.saveProcessedEvent(callSession);
     }
 
 
@@ -73,9 +61,12 @@ export default class CallRepositoryDomain {
             branches: {},
             lastSequenceId: 0,
             events: [],
-            lastEvent: null,
+            lastEvent: undefined,
+            lockCall: false,
+            lastSequence: false,
             processing: false,
-            startDate: new Date()
+            startDate: new Date(),
+            errors: []
         }
         this.callsAggregates.set(key, callSession)
         return callSession

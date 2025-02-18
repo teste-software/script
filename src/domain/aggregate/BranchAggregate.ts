@@ -1,8 +1,7 @@
 import {CALLS_TYPE_EVENTS_NAMES} from "../types/EventTypes";
-import Branch from "../entities/Branch";
-import {BranchStateType} from "../valueObjects/BranchState";
+import Branch, {BranchStateType} from "../entities/Branch";
 import {BaseAggregate} from "./index";
-import {TYPE_QUEUE} from "../valueObjects/QueueId";
+import {TYPE_QUEUE} from "../../application/dtos/events";
 
 export default class BranchAggregate extends BaseAggregate {
     readonly branchEntity: Branch;
@@ -10,6 +9,10 @@ export default class BranchAggregate extends BaseAggregate {
     constructor(branchNumber: string) {
         super();
         this.branchEntity = new Branch(branchNumber);
+    }
+
+    isFinished() {
+        return this.branchEntity.getState() === BranchStateType.LOGGED_IN;
     }
 
     transitionStatus(nameEvent: CALLS_TYPE_EVENTS_NAMES, typeQueue?: TYPE_QUEUE) {

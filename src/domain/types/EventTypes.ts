@@ -22,6 +22,8 @@ export interface Event {
     data9: string,
 }
 
+export type TYPE_QUEUE = 'receptive' | 'active' | 'internal'
+
 export enum BRANCHES_TYPE_EVENTS_NAMES {
     LOGIN = 'LOGIN',
     LOGOUT = 'LOGOUT',
