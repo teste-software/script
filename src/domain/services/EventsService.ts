@@ -63,7 +63,6 @@ export default class EventsService extends BaseService {
         updateBranch(event.branchesNumber?.source);
         updateBranch(event.branchesNumber?.destination);
 
-
         callSession.lastSequenceId = event.sequenceId;
         callSession.lastSequence = event.lastSequence;
         callSession.lastEvent = event;
@@ -87,6 +86,4 @@ export default class EventsService extends BaseService {
 
         return this.callRepositoryDomain.forceFinishedCallSession(callId, clientId);
     }
-
-
 }

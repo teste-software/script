@@ -37,7 +37,7 @@ export default class Call extends Entity {
             [CallStateType.PENDING]: [CallStateType.CALLING, CallStateType.IN_URA],
             [CallStateType.IN_URA]: [CallStateType.IN_QUEUE, CallStateType.FINISHED, CallStateType.IN_URA],
             [CallStateType.IN_QUEUE]: [CallStateType.CALLING, CallStateType.IN_QUEUE, CallStateType.FINISHED],
-            [CallStateType.CALLING]: [CallStateType.IN_ATTENDANCE, CallStateType.FINISHED, CallStateType.CALLING, CallStateType.IN_QUEUE],
+            [CallStateType.CALLING]: [CallStateType.IN_ATTENDANCE, CallStateType.CALLING, CallStateType.IN_QUEUE],
             [CallStateType.IN_ATTENDANCE]: [CallStateType.FINISHED],
             [CallStateType.FINISHED]: [CallStateType.FINISHED]
         };
